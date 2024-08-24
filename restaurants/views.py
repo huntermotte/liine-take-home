@@ -1,15 +1,16 @@
 import re
 from datetime import datetime, time
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.dateparse import parse_datetime
 from .models import Restaurant
 from .serializers import RestaurantSerializer
 
+
 class RestaurantListAPIView(generics.ListAPIView):
     serializer_class = RestaurantSerializer
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         """
         Optionally restricts the returned restaurants to those open at a specific datetime,
         by filtering against a `datetime` query parameter in the URL.
@@ -17,16 +18,17 @@ class RestaurantListAPIView(generics.ListAPIView):
         queryset = Restaurant.objects.all()
         datetime_str = self.request.query_params.get('datetime', None)
 
+        open_restaurant_names = []
+
         if datetime_str is not None:
             datetime_obj = parse_datetime(datetime_str)
             if datetime_obj:
-                open_restaurants = []
                 for restaurant in queryset:
                     if self.is_open(restaurant, datetime_obj):
-                        open_restaurants.append(restaurant.id)  # Collecting IDs to filter the queryset
-                queryset = queryset.filter(id__in=open_restaurants)
+                        open_restaurant_names.append(restaurant.name)
 
-        return queryset
+        # Return the response directly without any further processing
+        return Response({"open_restaurants": open_restaurant_names}, status=status.HTTP_200_OK)
 
     def is_open(self, restaurant, datetime_obj):
         # Parse the restaurant's `hours` field
@@ -74,7 +76,8 @@ class RestaurantListAPIView(generics.ListAPIView):
                 for day in days:
                     if '-' in day:
                         start_day, end_day = day.split('-')
-                        day_range = list(day_map.keys())[list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day)+1]
+                        day_range = list(day_map.keys())[
+                                    list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day) + 1]
                     else:
                         day_range = [day]
 
