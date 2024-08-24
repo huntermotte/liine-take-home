@@ -18,17 +18,29 @@ class RestaurantListAPIView(generics.ListAPIView):
         queryset = Restaurant.objects.all()
         datetime_str = self.request.query_params.get('datetime', None)
 
-        open_restaurant_names = []
+        if datetime_str is None:
+            return Response(
+                {"error": "A 'datetime' query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        if datetime_str is not None:
+        try:
             datetime_obj = parse_datetime(datetime_str)
-            if datetime_obj:
-                for restaurant in queryset:
-                    if self.is_open(restaurant, datetime_obj):
-                        open_restaurant_names.append(restaurant.name)
+            if datetime_obj is None:
+                raise ValueError("Invalid datetime format. Please use value that specifies a date and a time.")
+            open_restaurant_names = []
 
-        # Return the response directly without any further processing
-        return Response({"open_restaurants": open_restaurant_names}, status=status.HTTP_200_OK)
+            for restaurant in queryset:
+                if self.is_open(restaurant, datetime_obj):
+                    open_restaurant_names.append(restaurant.name)
+
+            return Response({"open_restaurants": open_restaurant_names}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def is_open(self, restaurant, datetime_obj):
         # Parse the restaurant's `hours` field
