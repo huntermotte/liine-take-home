@@ -64,41 +64,46 @@ class RestaurantListAPIView(generics.ListAPIView):
     def parse_hours(self, hours_str):
         """Parse the hours string into a structured format."""
         day_map = {
-            'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thu': 'Thursday',
+            'Mon': 'Monday', 'Tues': 'Tuesday', 'Wed': 'Wednesday', 'Thu': 'Thursday',
             'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'
         }
         hours_dict = {day: [] for day in day_map.values()}
 
-        # Split by '/'
+        # Split by '/' to handle different day/time groups
+        # 1. A-Za-z: All alphabetic characters.
+        # 2. ,: The comma character to separate days.
+        # 3. \s: Whitespace (space, tab, etc.).
+        # 4. -: The hyphen character at the end of the class, which now correctly represents a literal hyphen.
         parts = hours_str.split('/')
 
         # Regex to find day ranges and times
-        day_time_pattern = re.compile(r'([A-Za-z,-]+)\s+([\d:\sampm-]+)')
+        day_time_pattern = re.compile(r'([A-Za-z,\s-]+)\s+([\d:\sampm-]+)')
 
         for part in parts:
             match = day_time_pattern.search(part.strip())
             if match:
-                days, times = match.groups()
-                days = days.split(', ')
-                open_time_str, close_time_str = times.split('-')
+                days_str, times_str = match.groups()
+
+                # Split the days by ', ' and handle ranges like "Mon-Fri"
+                days = days_str.split(', ')
+                open_time_str, close_time_str = times_str.split('-')
                 open_time = self.parse_time(open_time_str)
                 close_time = self.parse_time(close_time_str)
 
-                # Handle day ranges like Mon-Fri
                 for day in days:
-                    if '-' in day:
+                    if '-' in day:  # Handle ranges like "Mon-Fri"
                         start_day, end_day = day.split('-')
-                        day_range = list(day_map.keys())[
-                                    list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day) + 1]
+                        day_range = list(day_map.keys())[list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day) + 1]
                     else:
                         day_range = [day]
 
                     # Map to the full day names and add to the hours_dict
-                    for day in day_range:
-                        full_day = day_map[day]
+                    for day_abbr in day_range:
+                        full_day = day_map[day_abbr.strip()]
                         hours_dict[full_day].append((open_time, close_time))
 
         return hours_dict
+
 
     def check_open_hours(self, parsed_hours, datetime_obj):
         day_of_week = datetime_obj.strftime('%A')  # e.g., 'Monday'
