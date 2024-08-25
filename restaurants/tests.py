@@ -38,8 +38,8 @@ class RestaurantCSVTest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         open_restaurants = data.get('open_restaurants', [])
-        # Expect 36/40 restaurants open - some are not open on Sunday and some close early or open late
-        self.assertEqual(len(open_restaurants), 36)
+        # Expect 37/40 restaurants open - two are not open on Sunday and one closes at 3pm
+        self.assertEqual(len(open_restaurants), 37)
 
     def test_missing_datetime(self):
         """Test that the request returns an error when no datetime parameter is provided."""
