@@ -1,14 +1,15 @@
 import csv
 import os
+from django.core.management import call_command, CommandError
 from django.test import TestCase
 from django.utils.dateparse import parse_datetime
+from io import StringIO
+from restaurants.models import Restaurant
+from restaurants.views import RestaurantListAPIView
+from django.conf import settings
 
-from liine import settings
-from .models import Restaurant
-from .views import RestaurantListAPIView
 
-
-class RestaurantCSVTest(TestCase):
+class RestaurantTest(TestCase):
 
     def setUp(self):
         # Load data from the CSV into the Restaurant model
@@ -18,18 +19,48 @@ class RestaurantCSVTest(TestCase):
     def load_csv_data(self):
         csv_file_path = os.path.join(settings.BASE_DIR, 'restaurants', 'restaurants.csv')
         with open(csv_file_path, 'r') as csvfile:
-            reader = csv.reader(csvfile)
+            reader = csv.DictReader(csvfile)
             for row in reader:
-                name, hours = row
+                name = row['Restaurant Name'].strip()
+                hours = row['Hours'].strip()
                 Restaurant.objects.create(name=name, hours=hours)
 
+    # Import command Tests
+    def test_import_restaurants_success(self):
+        Restaurant.objects.create(name="Old Restaurant", hours="Mon-Fri 9 am - 5 pm")
+        out = StringIO()
+        call_command('import_restaurants', stdout=out)
+        self.assertIn('Successfully imported restaurant data', out.getvalue())
+        self.assertEqual(Restaurant.objects.count(), 40)
+        self.assertTrue(Restaurant.objects.filter(name="The Cowfish Sushi Burger Bar").exists())
+
+    def test_import_restaurants_file_not_found(self):
+        with self.assertRaises(CommandError):
+            call_command('import_restaurants', 'non_existent_file.csv')
+
+    def test_import_restaurants_invalid_csv(self):
+        invalid_csv_content = """Wrong Name,Wrong Hours
+Something,Some value
+"""
+        invalid_file_path = os.path.join(os.path.dirname(__file__), 'invalid_test_restaurants.csv')
+        with open(invalid_file_path, 'w') as f:
+            f.write(invalid_csv_content)
+
+        with self.assertRaises(CommandError) as cm:
+            call_command('import_restaurants', invalid_file_path)
+
+        self.assertIn("CSV file must contain 'Restaurant Name' and 'Hours' columns", str(cm.exception))
+
+        if os.path.exists(invalid_file_path):
+            os.remove(invalid_file_path)
+
+    # View Tests
     def test_maximum_open_restaurant_count(self):
         """Test the maximum number of restaurants open given the hours data (Wednesday at 5pm)."""
         response = self.client.get('/restaurants/api/open', {'datetime': '2024-08-28T17:00:00'})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         open_restaurants = data.get('open_restaurants', [])
-        # Expect 39/40 restaurants open - Beasley's hours are obnoxious
         self.assertEqual(len(open_restaurants), 39)
 
     def test_sunday_open_restaurant_count(self):
@@ -38,7 +69,6 @@ class RestaurantCSVTest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         open_restaurants = data.get('open_restaurants', [])
-        # Expect 37/40 restaurants open - two are not open on Sunday and one closes at 3pm
         self.assertEqual(len(open_restaurants), 37)
 
     def test_missing_datetime(self):
@@ -109,10 +139,7 @@ class RestaurantCSVTest(TestCase):
         self.assertTrue(is_open)
 
     def test_sporadic_hours(self):
-        """
-        Test if a restaurant with hours not included in the CSV can be parsed correctly.
-        Ex. Times going past midnight for a given day, and 24-hour days
-        """
+        """Test if a restaurant with hours not included in the CSV can be parsed correctly."""
         odd = Restaurant.objects.create(
             name="Odd Cafe",
             hours="Mon 3:30 pm - 2 am / Wed 4 pm - 5 pm / Fri 12 am - 12 am"
