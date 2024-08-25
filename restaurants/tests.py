@@ -73,6 +73,14 @@ class RestaurantCSVTest(TestCase):
         err = data.get('error', "")
         self.assertEqual(err, "Invalid datetime format. Please use value that specifies a date and a time.")
 
+    def test_valid_date_no_time(self):
+        """Test that the request returns an error when datetime is valid but does not contain time information."""
+        response = self.client.get('/restaurants/api/open', {'datetime': '2024-08-28'})
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        err = data.get('error', "")
+        self.assertEqual(err, "The provided datetime is missing time information. Please include both date and time.")
+
     def test_open_restaurant(self):
         """Test if a restaurant with specific hours is open on Wednesday at 12:00 PM."""
         restaurant = Restaurant.objects.get(name="The Cowfish Sushi Burger Bar")

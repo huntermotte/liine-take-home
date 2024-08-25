@@ -25,9 +25,14 @@ class RestaurantListAPIView(generics.ListAPIView):
             )
 
         try:
+            # Check if the datetime string includes time information
+            if 'T' not in datetime_str or len(datetime_str.split('T')[1]) == 0:
+                raise ValueError("The provided datetime is missing time information. Please include both date and time.")
+
             datetime_obj = parse_datetime(datetime_str)
             if datetime_obj is None:
                 raise ValueError("Invalid datetime format. Please use value that specifies a date and a time.")
+
             open_restaurant_names = []
 
             for restaurant in queryset:
