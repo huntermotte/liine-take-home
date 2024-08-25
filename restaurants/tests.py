@@ -39,9 +39,10 @@ class RestaurantTest(TestCase):
             call_command('import_restaurants', 'non_existent_file.csv')
 
     def test_import_restaurants_invalid_csv(self):
-        invalid_csv_content = """Wrong Name,Wrong Hours
-Something,Some value
-"""
+        invalid_csv_content = """
+        Wrong Name,Wrong Hours
+        Something,Some value
+        """
         invalid_file_path = os.path.join(os.path.dirname(__file__), 'invalid_test_restaurants.csv')
         with open(invalid_file_path, 'w') as f:
             f.write(invalid_csv_content)
