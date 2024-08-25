@@ -70,13 +70,13 @@ class RestaurantListAPIView(generics.ListAPIView):
         hours_dict = {day: [] for day in day_map.values()}
 
         # Split by '/' to handle different day/time groups
+        parts = hours_str.split('/')
+
+        # Regex to find day ranges and times
         # 1. A-Za-z: All alphabetic characters.
         # 2. ,: The comma character to separate days.
         # 3. \s: Whitespace (space, tab, etc.).
         # 4. -: The hyphen character at the end of the class, which now correctly represents a literal hyphen.
-        parts = hours_str.split('/')
-
-        # Regex to find day ranges and times
         day_time_pattern = re.compile(r'([A-Za-z,\s-]+)\s+([\d:\sampm-]+)')
 
         for part in parts:
