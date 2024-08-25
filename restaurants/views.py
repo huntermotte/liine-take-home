@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.dateparse import parse_datetime
@@ -100,6 +100,9 @@ class RestaurantListAPIView(generics.ListAPIView):
                     # Map to the full day names and add to the hours_dict
                     for day_abbr in day_range:
                         full_day = day_map[day_abbr.strip()]
+                        # Correct handling for midnight
+                        if close_time == time(0, 0):
+                            close_time = time(23, 59)  # Treat midnight as end of the day
                         hours_dict[full_day].append((open_time, close_time))
 
         return hours_dict
@@ -109,8 +112,24 @@ class RestaurantListAPIView(generics.ListAPIView):
         day_of_week = datetime_obj.strftime('%A')  # e.g., 'Monday'
         time_of_day = datetime_obj.time()
 
+        # Check for the current day
         if day_of_week in parsed_hours:
             for open_time, close_time in parsed_hours[day_of_week]:
-                if open_time <= time_of_day <= close_time:
-                    return True
+                # Correct interpretation of times that extend past midnight
+                if close_time <= open_time:
+                    # Time spans into the next day
+                    if open_time <= time_of_day or time_of_day <= close_time:
+                        return True
+                else:
+                    if open_time <= time_of_day <= close_time:
+                        return True
+
+        # Check for the previous day's late night hours (extending past midnight)
+        previous_day = (datetime_obj - timedelta(days=1)).strftime('%A')
+        if previous_day in parsed_hours:
+            for open_time, close_time in parsed_hours[previous_day]:
+                if close_time <= open_time:  # Restaurant closes after midnight
+                    if time_of_day <= close_time:
+                        return True
+
         return False
