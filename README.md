@@ -7,10 +7,13 @@
 * `docker compose up`
 
 ### Run without Docker
-* `python manage.py makemigrations`
-* `python manage.py migrate`
-* `python manage.py import_restaurants`
-* `python manage.py runserver`
+`python manage.py makemigrations &&
+ python manage.py migrate && 
+ python manage.py import_restaurants &&
+ python manage.py runserver
+`
+
+Or, to simply run after migration have been completed: `python manage.py runserver`
 
 Server should be running at `http://locahost:8000`
 

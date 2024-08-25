@@ -18,20 +18,20 @@ class RestaurantListAPIView(generics.ListAPIView):
         queryset = Restaurant.objects.all()
         datetime_str = self.request.query_params.get('datetime', None)
 
-        if datetime_str is None:
+        if datetime_str is None or not datetime_str:
             return Response(
                 {"error": "A 'datetime' query parameter is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            # Check if the datetime string includes time information
-            if 'T' not in datetime_str or len(datetime_str.split('T')[1]) == 0:
-                raise ValueError("The provided datetime is missing time information. Please include both date and time.")
-
             datetime_obj = parse_datetime(datetime_str)
             if datetime_obj is None:
                 raise ValueError("Invalid datetime format. Please use value that specifies a date and a time.")
+
+            # Check if the datetime string includes time information
+            if 'T' not in datetime_str or len(datetime_str.split('T')[1]) == 0:
+                raise ValueError("The provided datetime is missing time information. Please include both date and time.")
 
             open_restaurant_names = []
 
