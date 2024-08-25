@@ -41,6 +41,38 @@ class RestaurantCSVTest(TestCase):
         # Expect 36/40 restaurants open - some are not open on Sunday and some close early or open late
         self.assertEqual(len(open_restaurants), 36)
 
+    def test_missing_datetime(self):
+        """Test that the request returns an error when no datetime parameter is provided."""
+        response = self.client.get('/restaurants/api/open')
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        err = data.get('error', "")
+        self.assertEqual(err, "A 'datetime' query parameter is required.")
+
+    def test_invalid_month(self):
+        """Test that the request returns an error when the month is invalid."""
+        response = self.client.get('/restaurants/api/open', {'datetime': '2024-44-25T17:00:00'})
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        err = data.get('error', "")
+        self.assertEqual(err, "month must be in 1..12")
+
+    def test_invalid_day(self):
+        """Test that the request returns an error when the day is invalid."""
+        response = self.client.get('/restaurants/api/open', {'datetime': '2024-08-75T17:00:00'})
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        err = data.get('error', "")
+        self.assertEqual(err, "day is out of range for month")
+
+    def test_invalid_datetime_format(self):
+        """Test that the request returns an error when datetime does not contain parseable time information."""
+        response = self.client.get('/restaurants/api/open', {'datetime': '2024-08-28T3434'})
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        err = data.get('error', "")
+        self.assertEqual(err, "Invalid datetime format. Please use value that specifies a date and a time.")
+
     def test_open_restaurant(self):
         """Test if a restaurant with specific hours is open on Wednesday at 12:00 PM."""
         restaurant = Restaurant.objects.get(name="The Cowfish Sushi Burger Bar")
