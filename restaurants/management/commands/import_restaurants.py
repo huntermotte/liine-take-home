@@ -12,7 +12,6 @@ class Command(BaseCommand):
         with open(csv_file_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                print(row)
                 name = row['name']
                 hours = row['hours']
 

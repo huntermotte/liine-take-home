@@ -19,8 +19,12 @@ Server should be running at `http://locahost:8000`
 To return all restaurants open at a given date and time, you can send a request like this:
 `http://localhost:8000/restaurants/api/open?datetime=2024-08-27T12:50:00`
 
-### Running Tests
+## Running Tests
 `python manage.py test restaurants`
+
+To get a code coverage report:
+* `coverage run --source='.' manage.py test restaurants`
+* `coverage report`
 
 ## Considerations:
 * Due to limited project scope, we are using Django's built-in SQLite database as opposed to more heavy-handed options

@@ -2,6 +2,8 @@
 FROM python:3.10-slim
 
 # Set environment variables
+# Prevents Python from creating .pyc files, reducing unnecessary file writes and keeping the container filesystem cleaner.
+# Forces Python to flush output directly to the console or logs for real-time monitoring.
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
