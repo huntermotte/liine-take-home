@@ -118,7 +118,7 @@ class RestaurantCSVTest(TestCase):
             hours="Mon 3:30 pm - 2 am / Wed 4 pm - 5 pm / Fri 12 am - 12 am"
         )
         datetime_str_next_day = '2024-09-03T01:00:00'  # Tuesday at 1 am
-        datetime_str_all_day = '2024-09-03T01:00:00'  # Friday at 12: 07 am
+        datetime_str_all_day = '2024-08-30T00:07:00'  # Friday at 12:07 am
         datetime_obj_next_day = parse_datetime(datetime_str_next_day)
         datetime_obj_all_day = parse_datetime(datetime_str_all_day)
         parsed_hours = self.view.parse_hours(odd.hours)
