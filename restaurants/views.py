@@ -83,11 +83,20 @@ class RestaurantListAPIView(generics.ListAPIView):
 
                 day_range = self.expand_day_range(days_str, day_map)
                 for full_day in day_range:
-                    if close_time == time(0, 0):
-                        close_time = time(23, 59)  # Treat midnight as end of the day
                     hours_dict[full_day].append((open_time, close_time))
 
+                    # Handle closing time that extends past midnight
+                    if close_time <= open_time:
+                        next_day = self.get_next_day(full_day)
+                        hours_dict[next_day].append((time(0, 0), close_time))
+
         return hours_dict
+
+    def get_next_day(self, current_day):
+        """Get the next day of the week given the current day."""
+        current_date = datetime.strptime(current_day, '%A')
+        next_date = current_date + timedelta(days=1)
+        return next_date.strftime('%A')
 
     def expand_day_range(self, days_str, day_map):
         """Expand a day range like 'Mon-Fri' into a list of full day names."""

@@ -93,7 +93,7 @@ class RestaurantCSVTest(TestCase):
     def test_closed_restaurant(self):
         """Test if a restaurant with specific hours is closed on Wednesday at 5:00 PM."""
         restaurant = Restaurant.objects.get(name="Beasley's Chicken + Honey")
-        datetime_str = '2024-08-28T17:00:00'  # Wednesday at 5:00 PM
+        datetime_str = '2024-08-28T17:00:00'  # Wednesday at 5:00 pm
         datetime_obj = parse_datetime(datetime_str)
         parsed_hours = self.view.parse_hours(restaurant.hours)
         is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
@@ -102,8 +102,27 @@ class RestaurantCSVTest(TestCase):
     def test_hours_past_midnight(self):
         """Test if a restaurant is open given hours that extend past midnight."""
         restaurant = Restaurant.objects.get(name="Seoul 116")
-        datetime_str = '2024-08-30T03:00:00'  # Friday at 3:00 AM
+        datetime_str = '2024-08-30T03:00:00'  # Friday at 3:00 am
         datetime_obj = parse_datetime(datetime_str)
         parsed_hours = self.view.parse_hours(restaurant.hours)
         is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
         self.assertTrue(is_open)
+
+    def test_sporadic_hours(self):
+        """
+        Test if a restaurant with hours not included in the CSV can be parsed correctly.
+        Ex. Times going past midnight for a given day, and 24-hour days
+        """
+        odd = Restaurant.objects.create(
+            name="Odd Cafe",
+            hours="Mon 3:30 pm - 2 am / Wed 4 pm - 5 pm / Fri 12 am - 12 am"
+        )
+        datetime_str_next_day = '2024-09-03T01:00:00'  # Tuesday at 1 am
+        datetime_str_all_day = '2024-09-03T01:00:00'  # Friday at 12: 07 am
+        datetime_obj_next_day = parse_datetime(datetime_str_next_day)
+        datetime_obj_all_day = parse_datetime(datetime_str_all_day)
+        parsed_hours = self.view.parse_hours(odd.hours)
+        is_open_next_day = self.view.check_open_hours(parsed_hours, datetime_obj_next_day)
+        is_open_all_day = self.view.check_open_hours(parsed_hours, datetime_obj_all_day)
+        self.assertTrue(is_open_next_day)
+        self.assertTrue(is_open_all_day)
