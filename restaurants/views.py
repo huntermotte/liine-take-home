@@ -6,13 +6,17 @@ from django.utils.dateparse import parse_datetime
 from .models import Restaurant
 from .serializers import RestaurantSerializer
 
+
 class RestaurantListAPIView(generics.ListAPIView):
     serializer_class = RestaurantSerializer
 
     def get(self, request, *args, **kwargs):
         """
-        Optionally restricts the returned restaurants to those open at a specific datetime,
-        by filtering against a `datetime` query parameter in the URL.
+        Returns a list of restaurant names that are open at a specific datetime.
+
+        The view filters restaurants based on a `datetime` query parameter provided in the URL.
+        The `datetime` parameter must include both date and time in ISO 8601 format (e.g., '2024-08-25T17:00:00').
+        If the `datetime` parameter is missing, or if it lacks time information, an error response is returned.
         """
         queryset = Restaurant.objects.all()
         datetime_str = self.request.query_params.get('datetime', None)
@@ -68,7 +72,7 @@ class RestaurantListAPIView(generics.ListAPIView):
         # 1. A-Za-z: All alphabetic characters.
         # 2. ,: The comma character to separate days.
         # 3. \s: Whitespace (space, tab, etc.).
-        # 4. -: The hyphen character at the end of the class, which now correctly represents a literal hyphen.
+        # 4. -: The hyphen character at the end of the class
         day_time_pattern = re.compile(r'([A-Za-z,\s-]+)\s+([\d:\sampm-]+)')
 
         for part in hours_str.split('/'):
@@ -93,7 +97,8 @@ class RestaurantListAPIView(generics.ListAPIView):
             if '-' in day:
                 start_day, end_day = day.split('-')
                 expanded_days.extend(
-                    list(day_map.values())[list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day) + 1]
+                    list(day_map.values())[
+                    list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day) + 1]
                 )
             else:
                 expanded_days.append(day_map[day.strip()])
