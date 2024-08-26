@@ -104,10 +104,10 @@ class RestaurantListAPIView(generics.ListAPIView):
         for day in days:
             if '-' in day:
                 start_day, end_day = day.split('-')
-                expanded_days.extend(
-                    list(day_map.values())[
-                    list(day_map.keys()).index(start_day):list(day_map.keys()).index(end_day) + 1]
-                )
+                day_keys = list(day_map.keys())
+                start = day_keys.index(start_day)
+                end = day_keys.index(end_day) + 1
+                expanded_days.extend(list(day_map.values())[start:end])
             else:
                 expanded_days.append(day_map[day.strip()])
         return expanded_days
