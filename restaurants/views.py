@@ -118,7 +118,6 @@ class RestaurantListAPIView(generics.ListAPIView):
         day_of_week = datetime_obj.strftime('%A')
         time_of_day = datetime_obj.time()
 
-        # First, check if the current time is within today's operating hours
         if self.is_within_open_hours(parsed_hours.get(day_of_week, []), time_of_day):
             return True
 
