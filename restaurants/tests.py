@@ -178,3 +178,21 @@ class RestaurantTest(TestCase):
         parsed_hours = self.view.parse_hours(restaurant.hours)
         is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
         self.assertTrue(is_open)
+
+    def test_gaps_in_operating_hours(self):
+        """Test a restaurant with a gap in its operating hours on the same day."""
+        restaurant = Restaurant.objects.create(
+            name="Break Time Cafe",
+            hours="Mon-Fri 9:00 am - 11:00 am, 1:00 pm - 5:00 pm"
+        )
+        datetime_str = '2024-08-26T12:00:00'  # Monday at 12:00 pm
+        datetime_obj = parse_datetime(datetime_str)
+        parsed_hours = self.view.parse_hours(restaurant.hours)
+        is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
+        self.assertFalse(is_open)  # Should be closed during the gap
+
+        # Test during operating hours
+        datetime_str = '2024-08-26T10:00:00'  # Monday at 10:00 am
+        datetime_obj = parse_datetime(datetime_str)
+        is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
+        self.assertTrue(is_open)
