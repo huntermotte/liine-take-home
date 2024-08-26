@@ -27,7 +27,7 @@ To return all restaurants open at a given date and time, you can send a request 
 
 To get a code coverage report:
 * `coverage run --source='.' manage.py test restaurants`
-* `coverage report`
+* `coverage report` or `coverage html` for a more detailed report
 
 ## Considerations:
 * Due to limited project scope, we are using Django's built-in SQLite database as opposed to more heavy-handed options

@@ -118,27 +118,20 @@ class RestaurantListAPIView(generics.ListAPIView):
         day_of_week = datetime_obj.strftime('%A')
         time_of_day = datetime_obj.time()
 
-        # Check if there are hours listed for the current day
-        if day_of_week not in parsed_hours or not parsed_hours[day_of_week]:
-            return False
-
-        # Check if the restaurant is open during the current day's hours
-        if self.is_within_open_hours(parsed_hours[day_of_week], time_of_day):
-            return True
-
-        # Check for the previous day's late night hours (extending past midnight)
-        previous_day = (datetime_obj - timedelta(days=1)).strftime('%A')
-        if previous_day in parsed_hours and self.is_within_open_hours(parsed_hours[previous_day], time_of_day):
+        # First, check if the current time is within today's operating hours
+        if self.is_within_open_hours(parsed_hours.get(day_of_week, []), time_of_day):
             return True
 
         return False
 
     def is_within_open_hours(self, hours_list, time_of_day):
-        """Check if the given time is within any open hours."""
+        """Check if the given time is within any open hours for a specific day."""
         for open_time, close_time in hours_list:
             if close_time <= open_time:
-                if open_time <= time_of_day or time_of_day <= close_time:
+                # Handle hours that extend past midnight
+                if open_time <= time_of_day or time_of_day < close_time:
                     return True
             elif open_time <= time_of_day <= close_time:
                 return True
         return False
+

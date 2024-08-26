@@ -70,7 +70,7 @@ class RestaurantTest(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         open_restaurants = data.get('open_restaurants', [])
-        self.assertEqual(len(open_restaurants), 37)
+        self.assertEqual(len(open_restaurants), 36)
 
     def test_missing_datetime(self):
         """Test that the request returns an error when no datetime parameter is provided."""
