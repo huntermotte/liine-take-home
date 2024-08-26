@@ -8,7 +8,7 @@
 
 ### Run without Docker
 `python manage.py makemigrations &&
- python manage.py migrate && 
+ python manage.py migrate &&
  python manage.py import_restaurants &&
  python manage.py runserver
 `

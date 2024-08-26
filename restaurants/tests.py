@@ -154,3 +154,27 @@ class RestaurantTest(TestCase):
         is_open_all_day = self.view.check_open_hours(parsed_hours, datetime_obj_all_day)
         self.assertTrue(is_open_next_day)
         self.assertTrue(is_open_all_day)
+
+    def test_24_hour_operation(self):
+        """Test a restaurant that operates 24 hours a day."""
+        all_day = Restaurant.objects.create(
+            name="24/7 Diner",
+            hours="Mon-Sun 12:00 am - 12:00 am"
+        )
+        datetime_str = '2024-08-27T15:00:00'  # Any time of the day
+        datetime_obj = parse_datetime(datetime_str)
+        parsed_hours = self.view.parse_hours(all_day.hours)
+        is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
+        self.assertTrue(is_open)
+
+    def test_non_contiguous_days(self):
+        """Test a restaurant with non-contiguous operating days."""
+        restaurant = Restaurant.objects.create(
+            name="Selective Eats",
+            hours="Mon-Wed 8:00 am - 5:00 pm / Fri 10:00 am - 8:00 pm"
+        )
+        datetime_str = '2024-08-30T11:00:00'  # Friday at 11:00 am
+        datetime_obj = parse_datetime(datetime_str)
+        parsed_hours = self.view.parse_hours(restaurant.hours)
+        is_open = self.view.check_open_hours(parsed_hours, datetime_obj)
+        self.assertTrue(is_open)
