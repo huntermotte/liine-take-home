@@ -69,10 +69,9 @@ class RestaurantListAPIView(generics.ListAPIView):
         hours_dict = {day: [] for day in day_map.values()}
 
         # Regex to find day ranges and times
-        # 1. A-Za-z: All alphabetic characters.
-        # 2. ,: The comma character to separate days.
-        # 3. \s: Whitespace (space, tab, etc.).
-        # 4. -: The hyphen character at the end of the class
+        # 1. ([A-Za-z,\s-]+): Captures the days of the week or ranges (e.g., "Mon-Fri")
+        # 2. \s+: Matches the space between the days and times
+        # 3. ([\d:\sampm-]+): Captures the time range (e.g., "11:00 am - 10:00 pm")
         day_time_pattern = re.compile(r'([A-Za-z,\s-]+)\s+([\d:\sampm-]+)')
 
         for part in hours_str.split('/'):
